@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<style type="text/css">
+	* { margin: 0; padding: 0; }
+	.demo { width: 200px; height: 200px; margin: 100px auto; background: red; }
+	</style>
+</head>
+<body>
+
+	<div id="app"></div>
+
+	<script type="text/regular" id="demo">
+		<div class="demo" on-tap={this.onTap()} on-longTap={this.onLongTap()} on-swipe={this.onSwipe()} on-swipeLeft={this.onSwipeLeft()} on-swipeRight={this.onSwipeRight()} on-swipeUp={this.onSwipeUp()} on-swipeDown={this.onSwipeDown()} on-doubleTap={this.onDoubleTap()}></div>
+	</script>
+
+	<script src="../lib/regular/regular.js"></script>
+	<script src="../src/regular-touch.js"></script>
+	<script>
+	var Demo = Regular.extend({
+		template: '#demo',
+
+		onTap: function(e) {
+			console.log('tap');
+		},
+		onLongTap: function(e) {
+			console.log('long~~~tap');
+		},
+		onDoubleTap: function(e) {
+			console.log('double-tap')
+		}
+		onSwipe: function(e) {
+			console.log('swipe');
+		},
+		onSwipeLeft: function(e) {
+			console.log('swipe-left');
+		},
+		onSwipeRight: function(e) {
+			console.log('swipe-right');
+		},
+		onSwipeUp: function(e) {
+			console.log('swipe-up');
+		},
+		onSwipeDown: function(e) {
+			console.log('swipe-down');
+		}
+	});
+	var demo = new Demo();
+	demo.$inject('#app');
+	</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+	"strict"   : false,
+	"undef"    : true,     
+	"unused"   : true,
+
+	"asi"      : true,
+	"evil"     : false,
+
+	"browser": true,
+	"devel": true,
+
+	"globals"  : { 
+		"Regular": true
+	}        
+}
