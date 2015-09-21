@@ -8,7 +8,9 @@
 
 ;(function() {
 
-var dom = Regular.dom;
+var dom = Regular.dom
+
+var swipes = ['', 'Left', 'Right', 'Up', 'Down']
 
 var touch = {},
 	longTapDelay = 750,
@@ -22,41 +24,41 @@ function swipeDirection(x1, x2, y1, y2) {
 }
 
 function onTouchstart(e) {
-	e.preventDefault();
-	firstTouch = e.event.targetTouches[0];
+	e.preventDefault()
+	firstTouch = e.event.targetTouches[0]
 	if(e.event.targetTouches && e.event.targetTouches.length === 1 && touch.x2) {
-		touch.x2 = undefined;
-		touch.y2 = undefined;
+		touch.x2 = undefined
+		touch.y2 = undefined
 	}
 
-	now = Date.now();
-	delta = now - (touch.last || now);
+	now = Date.now()
+	delta = now - (touch.last || now)
 
-	touch.x1 = firstTouch.pageX;
-	touch.y1 = firstTouch.pageY;
+	touch.x1 = firstTouch.pageX
+	touch.y1 = firstTouch.pageY
 
 	if(delta > 0 && delta < 250) touch.isDoubleTap = true
-	touch.last = now;
+	touch.last = now
 }
 function onTouchmove(e) {
-	e.preventDefault();
-	firstTouch = e.event.targetTouches[0];
-	touch.x2 = firstTouch.pageX;
-	touch.y2 = firstTouch.pageY;
+	e.preventDefault()
+	firstTouch = e.event.targetTouches[0]
+	touch.x2 = firstTouch.pageX
+	touch.y2 = firstTouch.pageY
 
-	deltaX += Math.abs(touch.x1 - touch.x2);
-	deltaY += Math.abs(touch.y1 - touch.y2);
+	deltaX += Math.abs(touch.x1 - touch.x2)
+	deltaY += Math.abs(touch.y1 - touch.y2)
 }
 function listenTouch(elem, onTouchend) {
-	dom.on(elem, 'touchstart', onTouchstart);
-	dom.on(elem, 'touchmove', onTouchmove);
-	dom.on(elem, 'touchend', onTouchend);
+	dom.on(elem, 'touchstart', onTouchstart)
+	dom.on(elem, 'touchmove', onTouchmove)
+	dom.on(elem, 'touchend', onTouchend)
 }
 function destroyTouch(elem, onTouchend) {
 	return function destroy() {
-		dom.off(elem, 'touchstart', onTouchstart);
-		dom.off(elem, 'touchmove', onTouchmove);
-		dom.off(elem, 'touchend', onTouchend);
+		dom.off(elem, 'touchstart', onTouchstart)
+		dom.off(elem, 'touchmove', onTouchmove)
+		dom.off(elem, 'touchend', onTouchend)
 	}	
 }
 
@@ -64,22 +66,22 @@ function destroyTouch(elem, onTouchend) {
 Regular.event('tap', function(elem, fire) {
 
 	function onTouchend(e) {
-		e.preventDefault();
-		firstTouch = e.event.changedTouches[0];
+		e.preventDefault()
+		firstTouch = e.event.changedTouches[0]
 		if(Math.abs(firstTouch.pageX - touch.x1) < 6 &&
 			Math.abs(firstTouch.pageY - touch.y1) < 6) {
-			fire(e);
+			fire(e)
 		}
 	}
 
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
+	listenTouch(elem, onTouchend)
+	return destroyTouch(elem, onTouchend)
 });
 
 Regular.event('longTap', function(elem, fire) {
 
-	function onTouchend(e) {
-		e.preventDefault();
+	function onTouchend(e) { // if move, should cancel
+		e.preventDefault()
 		if(touch.last) {
 			if(Date.now() - touch.last > longTapDelay) {
 				fire(e)
@@ -87,15 +89,15 @@ Regular.event('longTap', function(elem, fire) {
 		}
 	}
 
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
+	listenTouch(elem, onTouchend)
+	return destroyTouch(elem, onTouchend)
 });
 
 Regular.event('doubleTap', function(elem, fire) {
 
 	function onTouchend(e) {
-		e.preventDefault();
-		firstTouch = e.event.changedTouches[0];
+		e.preventDefault()
+		firstTouch = e.event.changedTouches[0]
 		if('last' in touch) {
 			if(Math.abs(firstTouch.pageX - touch.x1) < 6 &&
 				Math.abs(firstTouch.pageY - touch.y1) < 6) {
@@ -108,83 +110,33 @@ Regular.event('doubleTap', function(elem, fire) {
 		}
 	}
 
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
+	listenTouch(elem, onTouchend)
+	return destroyTouch(elem, onTouchend)
 });
 
-Regular.event('swipe', function(elem, fire) {
+swipes.forEach(function(evName) {
+	Regular.event('swipe' + evName, function(elem, fire) {
 
-	function onTouchend(e) {
-		e.preventDefault();
-		if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
-			touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
-			fire(e);
-		} 
-	}
+		function onTouchend(e) {
+			e.preventDefault();
+			if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
+				touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
 
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
-});
+				if(evName) {
+					if(swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2) === evName) fire(e)
+				} else {
+					fire(e)
+				}
+			} 
+		}
 
-Regular.event('swipeLeft', function(elem, fire) {
-
-	function onTouchend(e) {
-		e.preventDefault();
-		if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
-			touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
-
-			if(swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2) === 'Left') fire(e);
-		} 
-	}
-
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
-});
-Regular.event('swipeRight', function(elem, fire) {
-
-	function onTouchend(e) {
-		e.preventDefault();
-		if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
-			touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
-			
-			if(swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2) === 'Right') fire(e);
-		} 
-	}
-
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
-});
-Regular.event('swipeUp', function(elem, fire) {
-
-	function onTouchend(e) {
-		e.preventDefault();
-		if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
-			touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
-			
-			if(swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2) === 'Up') fire(e);
-		} 
-	}
-
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
-});
-Regular.event('swipeDown', function(elem, fire) {
-
-	function onTouchend(e) {
-		e.preventDefault();
-		if(touch.x2 && Math.abs(touch.x1 - touch.x2) > 30 ||
-			touch.y2 && Math.abs(touch.y1 - touch.y2) > 30) {
-			
-			if(swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2) === 'Down') fire(e);
-		} 
-	}
-
-	listenTouch(elem, onTouchend);
-	return destroyTouch(elem, onTouchend);
-});
+		listenTouch(elem, onTouchend)
+		return destroyTouch(elem, onTouchend)
+	})
+})
 
 Regular.event('drag', function(elem, fire) {
 
-});
+})
 
 })();
