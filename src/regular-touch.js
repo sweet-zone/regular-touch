@@ -150,8 +150,4 @@ swipes.forEach(function(evName) {
 	})
 })
 
-Regular.event('drag', function(elem, fire) {
-
-})
-
 })();
