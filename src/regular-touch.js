@@ -15,15 +15,21 @@ var swipes = ['', 'Left', 'Right', 'Up', 'Down']
 var touch = {},
 	longTapDelay = 750,
 	firstTouch,
-	now, delta,
-	deltaX, deltaY
+	now, delta
+
+var longTapTimeout = null
 
 function swipeDirection(x1, x2, y1, y2) {
 	return Math.abs(x1 - x2) >=
 		Math.abs(y1 - y2) ? (x1 - x2 > 0 ? 'Left' : 'Right') : (y1 - y2 > 0 ? 'Up' : 'Down')
 }
 
-function onTouchstart(e) {
+function cancelLongTap() {
+	if(longTapTimeout) clearTimeout(longTapTimeout)
+	longTapTimeout = null;
+}
+
+function listenTouchstart(e) {
 	e.preventDefault()
 	firstTouch = e.event.targetTouches[0]
 	if(e.event.targetTouches && e.event.targetTouches.length === 1 && touch.x2) {
@@ -40,21 +46,24 @@ function onTouchstart(e) {
 	if(delta > 0 && delta < 250) touch.isDoubleTap = true
 	touch.last = now
 }
-function onTouchmove(e) {
+
+function listenTouchmove(e) {
 	e.preventDefault()
+
 	firstTouch = e.event.targetTouches[0]
+	cancelLongTap();
+
 	touch.x2 = firstTouch.pageX
 	touch.y2 = firstTouch.pageY
-
-	deltaX += Math.abs(touch.x1 - touch.x2)
-	deltaY += Math.abs(touch.y1 - touch.y2)
 }
-function listenTouch(elem, onTouchend) {
+
+function listenTouch(elem, onTouchstart, onTouchmove, onTouchend) {
 	dom.on(elem, 'touchstart', onTouchstart)
 	dom.on(elem, 'touchmove', onTouchmove)
 	dom.on(elem, 'touchend', onTouchend)
 }
-function destroyTouch(elem, onTouchend) {
+
+function destroyTouch(elem, onTouchstart, onTouchmove, onTouchend) {
 	return function destroy() {
 		dom.off(elem, 'touchstart', onTouchstart)
 		dom.off(elem, 'touchmove', onTouchmove)
@@ -74,23 +83,29 @@ Regular.event('tap', function(elem, fire) {
 		}
 	}
 
-	listenTouch(elem, onTouchend)
-	return destroyTouch(elem, onTouchend)
+	listenTouch(elem, listenTouchstart, listenTouchmove, onTouchend)
+	return destroyTouch(elem,  listenTouchstart, listenTouchmove, onTouchend)
 });
 
 Regular.event('longTap', function(elem, fire) {
 
-	function onTouchend(e) { // if move, should cancel
-		e.preventDefault()
-		if(touch.last) {
-			if(Date.now() - touch.last > longTapDelay) {
+	function onTouchstart(e) {
+		listenTouchstart(e);
+		longTapTimeout = setTimeout(function() {
+			longTapTimeout = null;
+			if(touch.last) {
 				fire(e)
+				touch = {}
 			}
-		}
+		}, longTapDelay);
 	}
 
-	listenTouch(elem, onTouchend)
-	return destroyTouch(elem, onTouchend)
+	function onTouchend() {
+		cancelLongTap()
+	}
+
+	listenTouch(elem, onTouchstart, listenTouchmove, onTouchend)
+	return destroyTouch(elem, onTouchstart, listenTouchmove, onTouchend)
 });
 
 Regular.event('doubleTap', function(elem, fire) {
@@ -110,8 +125,8 @@ Regular.event('doubleTap', function(elem, fire) {
 		}
 	}
 
-	listenTouch(elem, onTouchend)
-	return destroyTouch(elem, onTouchend)
+	listenTouch(elem, listenTouchstart, listenTouchmove, onTouchend)
+	return destroyTouch(elem,  listenTouchstart, listenTouchmove, onTouchend)
 });
 
 swipes.forEach(function(evName) {
@@ -130,8 +145,8 @@ swipes.forEach(function(evName) {
 			} 
 		}
 
-		listenTouch(elem, onTouchend)
-		return destroyTouch(elem, onTouchend)
+		listenTouch(elem, listenTouchstart, listenTouchmove, onTouchend)
+		return destroyTouch(elem,  listenTouchstart, listenTouchmove, onTouchend)
 	})
 })
 
